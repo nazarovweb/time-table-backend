@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model rooms {
+  room_id     Int      @id @default(autoincrement())
+  floor       Int
+  room_number String
+  type        Int
+
+  schedules   schedule[]
+
+  @@map("rooms")
+}
+
+enum LessonType {
+  SOFTWARE
+  HUMANITARIAN
+  BUSINESS
+}
+
+model lessons {
+  lesson_id   Int        @id @default(autoincrement())
+  title       String
+  type        LessonType @default(SOFTWARE)
+
+  schedules   schedule[]
+  curriculums curriculum[]
+
+  @@map("lessons")
+}
+
+model techers {
+  teacher_id Int    @id @default(autoincrement())
+  first_name String
+  last_name  String
+
+  schedules  schedule[]
+
+  @@map("techers")
+}
+
+model specializations {
+  specialization_id Int      @id @default(autoincrement())
+  name              String   // masalan: SW-Frontend, Data Analytics
+  description       String?
+
+  groups            groups[]
+  curriculums       curriculum[]
+
+  @@map("specializations")
+}
+
+model groups {
+  group_id          Int      @id @default(autoincrement())
+  group_number      Int
+  course_number     Int
+  semester          Int      @default(1)
+  specialization_id Int?
+
+  specialization    specializations? @relation(fields: [specialization_id], references: [specialization_id])
+  schedules         schedule[]
+
+  @@map("groups")
+}
+
+model curriculum {
+  curriculum_id     Int @id @default(autoincrement())
+  specialization_id Int
+  semester          Int
+  lesson_id         Int
+  times_per_week    Int @default(1)
+
+  specialization    specializations @relation(fields: [specialization_id], references: [specialization_id])
+  lesson            lessons         @relation(fields: [lesson_id], references: [lesson_id])
+
+  @@unique([specialization_id, semester, lesson_id])
+  @@map("curriculum")
+}
+
+model schedule {
+  schedule_id  Int @id @default(autoincrement())
+
+  group_id     Int
+  teacher_id   Int
+  lesson_id    Int
+  room_id      Int
+  day_of_week  Int
+  lesson_order Int
+
+  group   groups  @relation(fields: [group_id], references: [group_id], onDelete: Cascade)
+  teacher techers @relation(fields: [teacher_id], references: [teacher_id], onDelete: Cascade)
+  lesson  lessons @relation(fields: [lesson_id], references: [lesson_id], onDelete: Cascade)
+  room    rooms   @relation(fields: [room_id], references: [room_id], onDelete: Cascade)
+
+  @@index([group_id])
+  @@index([teacher_id])
+  @@index([lesson_id])
+  @@index([room_id])
+  @@index([day_of_week])
+  @@index([lesson_order])
+  @@map("schedule")
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+model users {
+  user_id    Int      @id @default(autoincrement())
+  full_name  String
+  email      String   @unique
+  password   String
+  role       Role     @default(STUDENT)
+  created_at DateTime @default(now())
+
+  @@map("users")
+}
