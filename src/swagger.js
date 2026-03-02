@@ -9,7 +9,7 @@ const options = {
       description: "Express + Prisma + PostgreSQL API dokumentatsiyasi",
     },
     servers: [
-      { url: "http://localhost:3000", description: "Local server" }
+      { url: "https://time-table-backend-4o64.onrender.com", description: "Render server" }
     ],
     components: {
       securitySchemes: {
